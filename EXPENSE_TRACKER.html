@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Expense Tracker</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      display: flex;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      width: 380px;
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 { text-align: center; margin-bottom: 15px; }
+    .balance-box {
+      text-align: center;
+      background: #eaf7ea;
+      padding: 15px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    label { font-size: 14px; margin-top: 8px; display: block; }
+    input, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 14px;
+    }
+    button {
+      background: #2196F3;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      border: none;
+    }
+    button:hover { background: #1976d2; }
+    .history-btn { background: #4CAF50; }
+    .back-btn { background: #ff5722; }
+    .print-btn { background: #9c27b0; }
+    .clear-btn { background: #f44336; }
+    ul { list-style: none; padding: 0; }
+    li {
+      background: #f2f2f2;
+      margin: 6px 0;
+      padding: 10px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .amount.income { color: green; font-weight: bold; }
+    .amount.expense { color: red; font-weight: bold; }
+    .summary {
+      margin-top: 15px;
+      padding: 10px;
+      background: #eef5ff;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .summary p { margin: 4px 0; }
+
+    /* Welcome Screen */
+    #welcomeScreen {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: #2196F3;
+      color: white;
+      font-size: 28px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    /* Copyright Footer */
+    .copyright {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 12px;
+      color: #888;
+    }
+  </style>
+</head>
+<body>
+  <!-- Welcome Screen -->
+  <div id="welcomeScreen">👋 Welcome to Expense Tracker</div>
+
+  <div class="container" style="display:none;" id="mainApp">
+    <!-- Main Page -->
+    <div id="trackerPage">
+      <h2>💰 Expense Tracker</h2>
+      <div class="balance-box" id="balanceBox">Balance: ₹<span id="balance">0</span></div>
+
+      <label for="month">Select Month:</label>
+      <select id="month">
+        <option value="January">January</option>
+        <option value="February">February</option>
+        <option value="March">March</option>
+        <option value="April">April</option>
+        <option value="May">May</option>
+        <option value="June">June</option>
+        <option value="July">July</option>
+        <option value="August">August</option>
+        <option value="September">September</option>
+        <option value="October">October</option>
+        <option value="November">November</option>
+        <option value="December">December</option>
+      </select>
+
+      <label for="desc">Description:</label>
+      <input type="text" id="desc" placeholder="Ex: Pizza, Salary">
+
+      <label for="amount">Amount:</label>
+      <input type="number" id="amount" placeholder="+1000 for income, -500 for expense">
+
+      <button onclick="addTransaction()">➕ Add Transaction</button>
+      <button onclick="clearBalance()">💸 Clear Balance</button>
+      <button class="history-btn" onclick="showHistory()">📜 View History</button>
+    </div>
+
+    <!-- History Page -->
+    <div id="historyPage" style="display:none;">
+      <h2>📜 Transaction History</h2>
+      <ul id="transactions"></ul>
+      <div class="summary" id="summaryBox"></div>
+      <button class="print-btn" onclick="window.print()">🖨 Print</button>
+      <button class="clear-btn" onclick="clearHistory()">🗑 Clear This Month</button>
+      <button class="back-btn" onclick="showTracker()">⬅ Back</button>
+    </div>
+
+    <!-- Copyright Footer -->
+    <div class="copyright">© 2025 Mukund Mundel</div>
+  </div>
+
+  <script>
+    // Welcome screen timer
+    setTimeout(() => {
+      document.getElementById("welcomeScreen").style.display = "none";
+      document.getElementById("mainApp").style.display = "block";
+    }, 3000);
+
+    let balance = parseInt(localStorage.getItem("balance")) || 0;
+    const balanceEl = document.getElementById("balance");
+    const balanceBox = document.getElementById("balanceBox");
+
+    updateBalanceDisplay();
+
+    function updateBalanceDisplay() {
+      balanceEl.textContent = balance;
+      if (balance > 0) balanceBox.style.color = "green";
+      else if (balance < 0) balanceBox.style.color = "red";
+      else balanceBox.style.color = "black";
+    }
+
+    function addTransaction() {
+      const desc = document.getElementById("desc").value;
+      const amount = parseInt(document.getElementById("amount").value);
+      const month = document.getElementById("month").value;
+
+      if (!desc || isNaN(amount)) {
+        alert("Please enter description and amount!");
+        return;
+      }
+
+      balance += amount;
+      localStorage.setItem("balance", balance);
+      updateBalanceDisplay();
+
+      let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+      transactions.push({ desc, amount, month });
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+
+      document.getElementById("desc").value = "";
+      document.getElementById("amount").value = "";
+    }
+
+    function clearBalance() {
+      balance = 0;
+      localStorage.setItem("balance", balance);
+      updateBalanceDisplay();
+      alert("Balance has been reset to ₹0!");
+    }
+
+    function showHistory() {
+      document.getElementById("trackerPage").style.display = "none";
+      document.getElementById("historyPage").style.display = "block";
+      renderHistory();
+    }
+
+    function renderHistory() {
+      let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+      const transactionsEl = document.getElementById("transactions");
+      const summaryEl = document.getElementById("summaryBox");
+
+      transactionsEl.innerHTML = "";
+      summaryEl.innerHTML = "";
+
+      let totalIncome = 0, totalExpense = 0;
+      let currentMonth = document.getElementById("month").value;
+
+      transactions.forEach(t => {
+        if (t.month === currentMonth) {
+          const li = document.createElement("li");
+          li.innerHTML = `
+            <span><b>${t.desc}</b> (${t.month})</span>
+            <span class="amount ${t.amount >= 0 ? 'income' : 'expense'}">₹${t.amount}</span>
+          `;
+          transactionsEl.appendChild(li);
+
+          if (t.amount >= 0) totalIncome += t.amount;
+          else totalExpense += Math.abs(t.amount);
+        }
+      });
+
+      summaryEl.innerHTML = `
+        <p><b>${currentMonth} Summary:</b></p>
+        <p>Income: ₹${totalIncome}</p>
+        <p>Expense: ₹${totalExpense}</p>
+        <p>Net: ₹${totalIncome - totalExpense}</p>
+      `;
+    }
+
+    function clearHistory() {
+      let transactions = JSON.parse(localStorage.getItem("transactions")) || [];
+      let currentMonth = document.getElementById("month").value;
+      transactions = transactions.filter(t => t.month !== currentMonth);
+      localStorage.setItem("transactions", JSON.stringify(transactions));
+      renderHistory();
+      alert(currentMonth + " history cleared!");
+    }
+
+    function showTracker() {
+      document.getElementById("historyPage").style.display = "none";
+      document.getElementById("trackerPage").style.display = "block";
+    }
+  </script>
+</body>
+</html>
